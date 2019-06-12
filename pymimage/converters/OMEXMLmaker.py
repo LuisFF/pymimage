@@ -266,9 +266,10 @@ class OMEXMLMaker(object):
         self.done = 0
         self.shellrunners = {}
         self.herder = RunnerHerder(3)
-        self.files_to_convert = self.toconvert.keys()
-        self.files_to_convert.sort()
-        for f, f_out in self.toconvert.iteritems():
+        self.files_to_convert = sorted(self.toconvert.keys()) if sys.version_info[0] >= 3 \
+            else self.toconvert.keys().sort()
+
+        for f, f_out in self.toconvert.items() if sys.version_info[0] >= 3 else self.toconvert.iteritems():
             if os.path.isfile(f_out):
                 self.logger.info("%s already converted to %s" % (f, f_out))
             else:
@@ -322,7 +323,7 @@ class OMEXMLMakerQt(OMEXMLMaker):
                 files_converted = QC.pyqtSignal(int)
 
             self.qt_sender = SenderObject()
-        except ImportError, e:
+        except ImportError as e:
             self.logger.error("Cannot import PyQ5! Use the non-Qt class")
             raise e
 

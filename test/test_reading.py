@@ -1,30 +1,35 @@
 import os
+from os.path import join, dirname
+import pytest
 from pymimage.imagemaker import ImageMaker
 from nose.tools import raises
+import tempfile
+
+_filename = __file__
 
 
 def test_hash():
-    filename = os.path.join("test", "data", "Image0035.oib")
+    filename = join(dirname(_filename), "data", "Image0035.oib")
     assert ImageMaker.get_hash(filename) == "e06250156e"
 
 
-class TestOIBConversion():
+class TestOIBConversion:
 
     @classmethod
     def setup_class(cls):
-        "Remove existing file"
-        ome_name = os.path.join("tmp", "e06250156e.ome")
-        try:
-            pass
-            os.remove(ome_name)
-        except OSError:
-            pass
+        cls.filename = join(dirname(_filename), "data", "Image0035.oib")
+        cls.temp_dir = tempfile.TemporaryDirectory()
+        print(cls.temp_dir.name)
+        cls.imaker = ImageMaker(cls.temp_dir.name)
+        cls.ome_name = join(cls.temp_dir.name, "e06250156e.ome")
+        cls.ome_file = cls.imaker.load_file(cls.filename)
 
-    def setup(self):
-        self.filename = os.path.join("test", "data", "Image0035.oib")
-        self.imaker = ImageMaker("tmp")
-        self.ome_name = os.path.join("tmp", "e06250156e.ome")
-        self.ome_file = self.imaker.load_file(self.filename)
+    @classmethod
+    def teardown_class(cls):
+        try:
+            cls.temp_dir.cleanup()
+        except OSError as e:
+            raise e
 
     def test_load(self):
         """test"""
@@ -68,22 +73,42 @@ class TestOIBConversion():
             assert im_data.mean() > 0
 
 
-class TestMissingFileConversion():
+class TestMissingFileConversion:
 
-    def setup(self):
-        self.filename = os.path.join("test", "data", "nosuchfile.oib")
-        self.imaker = ImageMaker("tmp")
+    @classmethod
+    def setup_class(cls):
+        cls.filename = join(dirname(_filename), "data", "nosuchfile.oib")
+        cls.temp_dir = tempfile.TemporaryDirectory()
+        print(cls.temp_dir.name)
+        cls.imaker = ImageMaker(cls.temp_dir.name)
+
+    @classmethod
+    def teardown_class(cls):
+        try:
+            cls.temp_dir.cleanup()
+        except OSError as e:
+            raise e
 
     @raises(IOError)
     def test_load(self):
         self.ome_file = self.imaker.load_file(self.filename)
 
 
-class TestInvalidFileConversion():
+class TestInvalidFileConversion:
 
-    def setup(self):
-        self.filename = os.path.join("test", "data", "invalid.oib")
-        self.imaker = ImageMaker("tmp")
+    @classmethod
+    def setup_class(cls):
+        cls.filename = join(dirname(_filename), "data", "invalid.oib")
+        cls.temp_dir = tempfile.TemporaryDirectory()
+        print(cls.temp_dir.name)
+        cls.imaker = ImageMaker(cls.temp_dir.name)
+
+    @classmethod
+    def teardown_class(cls):
+        try:
+            cls.temp_dir.cleanup()
+        except OSError as e:
+            raise e
 
     def test_load(self):
         self.ome_file = self.imaker.load_file(self.filename)
